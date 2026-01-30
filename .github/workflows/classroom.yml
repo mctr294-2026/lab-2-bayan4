@@ -1,0 +1,29 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Standard Tests
+      id: standard-tests
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Standard Tests
+        setup-command: cmake -S . -B build; cmake --build build --config Debug
+        command: ctest --test-dir build -C Debug -V
+        timeout: 1
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        STANDARD-TESTS_RESULTS: "${{steps.standard-tests.outputs.result}}"
+      with:
+        runners: standard-tests
